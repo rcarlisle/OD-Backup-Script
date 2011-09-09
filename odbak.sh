@@ -1,7 +1,7 @@
 #!/bin/bash
 # Purpose: Automated Open Directory Archives
 # Includes options to remove old archives
-# Uncomment line 99 to enable removal after testing
+# Uncomment line 96 to enable removal after testing
 
 ###############################################
 ### Edit below to customize for your server ###
