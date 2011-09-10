@@ -51,7 +51,7 @@ day=0
 backupRemove() {
 # Get only properly named archive folders
 # else age calculations will fail
-files=$(ls $backup_path/$server | grep OD_Archive) 
+files=$(ls $backup_path/$server | grep OD_Backup) 
 
 # Find the newest file in the archive folder
 for file in $files; do
