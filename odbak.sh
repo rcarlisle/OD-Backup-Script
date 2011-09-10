@@ -1,27 +1,24 @@
 #!/bin/bash
-# Purpose: Automated Open Directory Archives
+# Purpose: Automated Open Directory Backups
 # Includes options to remove old archives
 # Uncomment line 96 to enable removal after testing
 
-###############################################
-### Edit below to customize for your server ###
-###############################################
-
-# Enter the Client Code between the quotes:
-client_code="ZZZ"
+# VARIABLES:
+# Variables here may be modified to suit your needs
 
 # Path to archive storage location
 # Avoid paths with spaces
-# Comment out one of the two lines after updating pathname.
-archive_path="/Users/ZZZZadmin/Documents/OD-Backups-Automatic"
-archive_path="/Users/ZZZZadmin/Documents/OpenDirectoryArchives"
+backup_path="/Users/localadmin/Documents/OD-Backups"
+
 
 # Password for the OD Archive image
-# MODIFY PASSWORD FOR EACH CLIENT
+# MODIFY PASSWORD FOR EACH SERVER
 password="MyPassword"
 
 # Host name of the server being backed up
 # Comment out one of the two following lines
+# Useful for identifying archives from multiple 
+# machines on remote volumes
 server="server.example.com"
 
 # Back up server admin plists - default gathers all
@@ -31,24 +28,18 @@ services=$(serveradmin list)
 # Age of archives to remove - in days
 age="14"
 
-###############################################
-###	   No Edits below this point	    ###
-###############################################
-
-# VARIABLES:
-
-# Create lc_lient_code (lower case) using tr to modify client_code (set above):
-lc_client_code=$(echo "$client_code" | tr "[:upper:]" "[:lower:]")
+# Variables here are internal to the script and should
+# not be modified.
 
 # Format todays timestamp as YYYYMMDD-HHMMSS
 now=$(date +%Y%m%d-%H%M%S)
 
-# Timestamped path to OD Archives
-archive=$archive_path/$server/$client_code-$now-OD_Archive
+# Timestamped path to OD Backups
+backup=$backup_path/$server/$now-OD_Backup
 
 # Initialize Aging Variables
 big_date_stamp=0
-latest_archive=0
+latest_backup=0
 date_stamp=0
 marker=0
 year=0
@@ -57,10 +48,10 @@ day=0
 
 # FUNCTIONS:
 
-archiveRemove() {
+backupRemove() {
 # Get only properly named archive folders
 # else age calculations will fail
-files=$(ls $archive_path/$server | grep OD_Archive) 
+files=$(ls $backup_path/$server | grep OD_Archive) 
 
 # Find the newest file in the archive folder
 for file in $files; do
@@ -68,10 +59,10 @@ for file in $files; do
 	if [ "$date_stamp" \> "$big_date_stamp" ] 
 	then
 		big_date_stamp="$date_stamp"
-		latest_archive="$file"
+		latest_backup="$file"
 	fi
 done
-echo "The newest file is $latest_archive with time stamp $big_date_stamp"
+echo "The newest file is $latest_backup with time stamp $big_date_stamp"
 
 # Break the time stamp of the latest backup into year, month and day for calculations.
 year=$(echo "$big_date_stamp" | cut -c 1-4)
@@ -92,33 +83,34 @@ for file in $files; do
 	date_stamp=$(echo "$file" | awk -F- '{print $2}')
 	if [ "$date_stamp" \< "$marker" ]
 	then
-		echo "removing $archive_path/$file"
-#		rm -Rf "$archive_path/$file"
+		echo "removing $backup_path/$file"
+#		rm -Rf "$backup_path/$file"
 	fi
 done
 }
 
-archiveCreate() {	
-# Create the path to OD Archives and set permissions
-mkdir -p $archive
-chmod 770 $archive
+backupCreate() {	
+# Create the path to OD Backups and set permissions
+mkdir -p $backup
+chmod 770 $backup
 
 # Create the OD archive in the new timestamped directory
-od_backup=$archive/od_backup
+od_backup=$backup/od_backup
 echo "dirserv:backupArchiveParams:archivePassword = $password" > $od_backup
-echo "dirserv:backupArchiveParams:archivePath = $archive/$lc_client_code-od_$now" >> $od_backup
+echo "dirserv:backupArchiveParams:archivePath = $backup/od_$now" >> $od_backup
 echo "dirserv:command = backupArchive" >> $od_backup
 echo "" >> $od_backup
 
 serveradmin command < $od_backup
-echo "Saved archive in $archive"
+echo "Saved backup in $backup"
 
 # Get server admin plists
-plistpath=$archive/serviceplists
+plistpath=$backup/serviceplists
 mkdir -p $plistpath
 for service in $services; do
 	echo "Copying $service to $plistpath"
   	serveradmin -x settings $service > $plistpath/$service.plist
+# serveradmin seems to do a little better if a delay takes place here
 	sleep 1
 done
 echo "Done!"
@@ -126,9 +118,9 @@ echo "Done!"
 
 usage() {
 	echo "Usage:"
-	echo "./odbak.sh -r :Remove old archives and create a new one."
-	echo "./odbak.sh -c :Remove old archives and exit."
-	echo "./odbak.sh :Create a new archive and exit."
+	echo "./odbak.sh -r :Remove old backups and create a new one."
+	echo "./odbak.sh -c :Remove old backups and exit."
+	echo "./odbak.sh :Create a new backup and exit."
 }
 
 # MAIN SCRIPT
@@ -136,15 +128,15 @@ usage() {
 while getopts "rch" opt; do
   case $opt in
     r)
-      echo "Removing old archives."
-      archiveRemove
-      echo "Creating a new archive."
-      archiveCreate
+      echo "Removing old backups."
+      backupRemove
+      echo "Creating a new backup."
+      backupCreate
       exit 0
       ;;
     c)
-      echo "Removing old archives."
-      archiveRemove
+      echo "Removing old backups."
+      backupRemove
       exit 0
      ;;
     h)
@@ -157,5 +149,5 @@ while getopts "rch" opt; do
       ;;
   esac
 done
-archiveCreate
+backupCreate
 exit 0
