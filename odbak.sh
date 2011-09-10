@@ -1,7 +1,7 @@
 #!/bin/bash
 # Purpose: Automated Open Directory Backups
 # Includes options to remove old archives
-# Uncomment line 96 to enable removal after testing
+# Uncomment line 87 to enable removal after testing
 
 # VARIABLES:
 # Variables here may be modified to suit your needs
