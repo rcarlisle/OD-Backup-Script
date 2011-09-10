@@ -1,12 +1,12 @@
 #!/bin/bash
 # Purpose: Automated Open Directory Backups
-# Includes options to remove old archives
+# Includes options to remove old backups
 # Uncomment line 87 to enable removal after testing
 
 # VARIABLES:
 # Variables here may be modified to suit your needs
 
-# Path to archive storage location
+# Path to backup storage location
 # Avoid paths with spaces
 backup_path="/Users/localadmin/Documents/OD-Backups"
 
@@ -17,7 +17,7 @@ password="MyPassword"
 
 # Host name of the server being backed up
 # Comment out one of the two following lines
-# Useful for identifying archives from multiple 
+# Useful for identifying backups from multiple 
 # machines on remote volumes
 server="server.example.com"
 
@@ -25,7 +25,7 @@ server="server.example.com"
 # services="afp ipfilter smb" to back up specific services only
 services=$(serveradmin list)
 
-# Age of archives to remove - in days
+# Age of backups to remove - in days
 age="14"
 
 # Variables here are internal to the script and should
@@ -49,11 +49,11 @@ day=0
 # FUNCTIONS:
 
 backupRemove() {
-# Get only properly named archive folders
+# Get only properly named backup folders
 # else age calculations will fail
 files=$(ls $backup_path/$server | grep OD_Backup) 
 
-# Find the newest file in the archive folder
+# Find the newest file in the backup folder
 for file in $files; do
 	date_stamp=$(echo "$file" | awk -F- '{print $2}')
 	if [ "$date_stamp" \> "$big_date_stamp" ] 
@@ -94,7 +94,7 @@ backupCreate() {
 mkdir -p $backup
 chmod 770 $backup
 
-# Create the OD archive in the new timestamped directory
+# Create the OD backup in the new timestamped directory
 od_backup=$backup/od_backup
 echo "dirserv:backupArchiveParams:archivePassword = $password" > $od_backup
 echo "dirserv:backupArchiveParams:archivePath = $backup/od_$now" >> $od_backup
